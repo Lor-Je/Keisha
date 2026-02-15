@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NAT Reviewer For Keisha Batig Nawng</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen active">
+            <span class="icon">📚</span>
+            <h1 style="margin-bottom: 10px;">NAT Reviewer For <span style="color: #FF1493;">Keisha Batig Nawng</span>
+            </h1>
+            <p style="margin-bottom: 20px; max-width: 500px;">
+                Practice Math, Science, English, Filipino, and AP.<br>
+                <strong>20 Questions per Subject.</strong>
+            </p>
+            <button class="btn-primary" onclick="startFlow('standard')">Standard Review</button>
+            <button class="btn-primary" style="margin-top: 10px; background-color: #2ECC71;"
+                onclick="startFlow('review')">Interactive Review Mode</button>
+        </div>
+
+        <!-- Subject Transition Screen -->
+        <div id="subject-transition-screen">
+            <h1 id="transition-title">Subject Name</h1>
+            <p>Get ready...</p>
+        </div>
+
+        <!-- Quiz List Screen (The Scrollable "Quizlet" View) -->
+        <div id="quiz-list-screen" class="screen">
+            <header>
+                <h1 id="current-subject-title" style="margin-bottom: 5px;">Subject</h1>
+                <p style="font-size: 0.9rem;">Select the best answer for each item below.</p>
+            </header>
+
+            <div id="questions-list">
+                <!-- Questions cards are injected here via JS -->
+            </div>
+
+            <div style="height: 100px;"></div> <!-- Spacer so the last card isn't hidden by the FAB -->
+        </div>
+
+        <!-- New Review Mode Screen -->
+        <div id="review-mode-screen" class="screen">
+            <header>
+                <h1 id="rm-subject-title" style="margin-bottom: 5px;">Subject</h1>
+                <p style="font-size: 0.9rem;">Question <span id="rm-q-num">1</span> of 20</p>
+            </header>
+
+            <div id="rm-card-container">
+                <!-- Single Card Injected Here -->
+            </div>
+
+            <div id="rm-feedback"
+                style="display: none; margin-top: 20px; padding: 15px; background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h3 id="rm-feedback-title">Correct!</h3>
+                <p id="rm-feedback-text">Explanation goes here.</p>
+                <button class="btn-primary" id="rm-next-btn" style="margin-top: 15px;"
+                    onclick="nextReviewQuestion()">Next Question</button>
+            </div>
+        </div>
+
+        <!-- Score Screen -->
+        <div id="score-screen" class="screen">
+            <div style="font-size: 4rem; margin-bottom: 10px;">🏆</div>
+            <h1>Review Complete!</h1>
+            <p
+                style="text-transform: uppercase; color: #888; letter-spacing: 1px; font-weight: 600; font-size: 0.9rem;">
+                Your Final Score</p>
+            <div class="score-display"><span id="final-score">0</span>/<span id="total-score">100</span></div>
+            <p id="score-message" style="font-size: 1.2rem; margin: 20px 0;">Great work!</p>
+            <button class="btn-primary" onclick="restartQuiz()">Review Again</button>
+        </div>
+
+    </div>
+
+    <!-- Floating Action Button for "Next/Finish" -->
+    <div class="fab-container" id="fab-container" style="display: none;">
+        <button class="btn-fab" id="fab-btn" onclick="nextSubject()">
+            <span>Next Subject ➡️</span>
+        </button>
+    </div>
+
+    <script>
+        /* 
+           DATA: Questions based on DepEd Grade 6 Curriculum.
+           organized by Subject.
+        */
+        const subjects = ["Mathematics", "Science", "English", "Filipino", "Araling Panlipunan"];
+
+        // Updated DB with Explanations
+        const db = {
+            "Mathematics": [
+                { q: "What is the value of N in: 5 + (3 × 4) - 2 = N?", opts: ["15", "10", "17", "20"], a: 0, expl: "PEMDAS Rule: 3×4=12, then 5+12=17, then 17-2=15." },
+                { q: "Which fraction is equivalent to 0.75?", opts: ["1/2", "3/4", "3/5", "7/5"], a: 1, expl: "0.75 is 75/100, which simplifies to 3/4." },
+                { q: "Perimeter of a rectangle with length 10cm and width 5cm?", opts: ["30cm", "50cm", "15cm", "25cm"], a: 0, expl: "Perimeter = 2(L + W) = 2(10 + 5) = 2(15) = 30cm." },
+                { q: "What is 25% of 200?", opts: ["25", "50", "75", "100"], a: 1, expl: "25% is 1/4. 200 ÷ 4 = 50." },
+                { q: "Solve: 1/2 + 1/4", opts: ["3/4", "2/4", "1/8", "1/6"], a: 0, expl: "Convert 1/2 to 2/4. Then 2/4 + 1/4 = 3/4." },
+                { q: "Which number is divisible by both 3 and 5?", opts: ["10", "12", "15", "20"], a: 2, expl: "15 ends in 5 (divisible by 5) and 1+5=6 (divisible by 3)." },
+                { q: "What is the GCF of 12 and 18?", opts: ["3", "6", "9", "12"], a: 1, expl: "Factors of 12: 1,2,3,4,6,12. Factors of 18: 1,2,3,6,9,18. Common greatest is 6." },
+                { q: "Convert 3.5 to a mixed number.", opts: ["3 1/2", "3 1/5", "3 1/4", "3 3/5"], a: 0, expl: "0.5 is 1/2. So 3.5 is 3 1/2." },
+                { q: "What is the area of a square with side 6cm?", opts: ["24 sq cm", "12 sq cm", "36 sq cm", "30 sq cm"], a: 2, expl: "Area = side × side = 6 × 6 = 36 sq cm." },
+                { q: "If x = 5, what is 2x + 3?", opts: ["10", "13", "8", "15"], a: 1, expl: "Substitute x=5: 2(5) + 3 = 10 + 3 = 13." },
+                { q: "Which integer is greater than -5?", opts: ["-10", "-6", "-8", "-1"], a: 3, expl: "-1 is closer to zero and to the right of -5 on the number line." },
+                { q: "What is the ratio of 4 apples to 8 bananas in simplest form?", opts: ["2:1", "1:2", "4:8", "1:4"], a: 1, expl: "4:8 simplifies by dividing both by 4, getting 1:2." },
+                { q: "Subtract: 10 - 3.45", opts: ["6.55", "7.55", "6.65", "7.45"], a: 0, expl: "10.00 - 3.45 = 6.55." },
+                { q: "How many centimeters are in 2 meters?", opts: ["20", "200", "2000", "0.2"], a: 1, expl: "1 meter = 100 cm. So 2 meters = 200 cm." },
+                { q: "Volume of a cube with edge 3cm?", opts: ["9 cu cm", "18 cu cm", "27 cu cm", "12 cu cm"], a: 2, expl: "Volume = edge³ = 3 × 3 × 3 = 27." },
+                { q: "Which is a prime number?", opts: ["9", "15", "21", "2"], a: 3, expl: "2 is the only even prime number. Others have factors besides 1 and self." },
+                { q: "Round 45,678 to the nearest thousand.", opts: ["45,000", "46,000", "50,000", "45,700"], a: 1, expl: "The hundreds digit is 6 (>=5), so round up the thousands digit 5 to 6." },
+                { q: "15 is what percent of 60?", opts: ["25%", "20%", "50%", "10%"], a: 0, expl: "15/60 = 1/4 = 0.25 = 25%." },
+                { q: "Product of 0.5 and 0.2?", opts: ["1.0", "0.1", "0.01", "0.25"], a: 1, expl: "5 × 2 = 10. Two decimal places total, so 0.10 or 0.1." },
+                { q: "Sum of angles in a triangle?", opts: ["90°", "180°", "360°", "100°"], a: 1, expl: "The sum of interior angles in any triangle is always 180 degrees." }
+            ],
+            "Science": [
+                { q: "Which organ pumps blood throughout the body?", opts: ["Lungs", "Stomach", "Heart", "Brain"], a: 2, expl: "The heart is the muscular organ that pumps blood." },
+                { q: "Interaction where both organisms benefit?", opts: ["Commensalism", "Mutualism", "Parasitism", "Predation"], a: 1, expl: "Mutualism is where both species benefit (e.g., bees and flowers)." },
+                { q: "What causes the cycle of day and night?", opts: ["Revolution", "Rotation", "Gravity", "Orbit"], a: 1, expl: "Earth's rotation on its axis causes day and night." },
+                { q: "Animals with backbones are called?", opts: ["Invertebrates", "Vertebrates", "Mammals", "Amphibians"], a: 1, expl: "Vertebrates are animals that possess a backbone or spinal column." },
+                { q: "Process by which plants make food?", opts: ["Digestion", "Photosynthesis", "Respiration", "Expiration"], a: 1, expl: "Photosynthesis uses sunlight to convert water and CO2 into food." },
+                { q: "Which needs air, water, and sunlight to survive?", opts: ["Rock", "Plant", "Table", "Car"], a: 1, expl: "Living things like plants need these resources." },
+                { q: "The control center of the nervous system.", opts: ["Heart", "Brain", "Spinal Cord", "Nerves"], a: 1, expl: "The brain controls thoughts, memory, and speech, movement, etc." },
+                { q: "Separating mixture by using a filter paper.", opts: ["Decantation", "Filtration", "Evaporation", "Sieving"], a: 1, expl: "Filtration separates solids from liquids using a filter." },
+                { q: "Which is a homogeneous mixture?", opts: ["Fruit Salad", "Salt Solution", "Sand and gravel", "Oil and water"], a: 1, expl: "A salt solution looks the same throughout (uniform composition)." },
+                { q: "Transformation from liquid to gas.", opts: ["Melting", "Freezing", "Evaporation", "Condensation"], a: 2, expl: "Evaporation is the process of a liquid turning into a gas." },
+                { q: "The thin outer layer of the Earth.", opts: ["Mantle", "Core", "Crust", "Atmosphere"], a: 2, expl: "The crust is the outermost solid shell of Earth." },
+                { q: "Force that pulls objects towards the Earth.", opts: ["Friction", "Magnetism", "Gravity", "Electricity"], a: 2, expl: "Gravity is the force of attraction toward the center of the Earth." },
+                { q: "Example of a simple machine?", opts: ["Computer", "Pulley", "Television", "Car"], a: 1, expl: "A pulley is a simple machine used to lift objects." },
+                { q: "Which planet is known as the Red Planet?", opts: ["Venus", "Mars", "Jupiter", "Saturn"], a: 1, expl: "Mars appears red due to iron oxide on its surface." },
+                { q: "A change where no new substance is formed.", opts: ["Chemical Change", "Physical Change", "Nuclear Change", "Biological Change"], a: 1, expl: "Physical changes affect form but not chemical composition (e.g., melting ice)." },
+                { q: "Organ system responsible for breathing.", opts: ["Circulatory", "Respiratory", "Digestive", "Skeletal"], a: 1, expl: "The respiratory system (lungs, trachea) handles breathing." },
+                { q: "Which material is a good conductor of heat?", opts: ["Wood", "Plastic", "Metal", "Rubber"], a: 2, expl: "Metals allow heat to pass through them easily." },
+                { q: "The basic unit of life.", opts: ["Tissue", "Organ", "Cell", "System"], a: 2, expl: "The cell is the smallest structural and functional unit of an organism." },
+                { q: "Earthquake magnitude is measured by?", opts: ["Barometer", "Thermometer", "Seismograph", "Anemometer"], a: 2, expl: "A seismograph detects and records earthquakes." },
+                { q: "Group of stars forming a pattern.", opts: ["Galaxy", "Constellation", "Solar System", "Universe"], a: 1, expl: "A constellation is a recognized pattern of stars." }
+            ],
+            "English": [
+                { q: "Subject in 'The diligent students studied hard.'", opts: ["studied", "students", "diligent", "hard"], a: 1, expl: "The subject is 'students', who performed the action." },
+                { q: "Past tense of 'catch'?", opts: ["Catched", "Caught", "Catching", "Cot"], a: 1, expl: "'Catch' is an irregular verb; past tense is 'caught'." },
+                { q: "Choose conjunction: 'I want to go, ___ it is raining.'", opts: ["and", "so", "but", "or"], a: 2, expl: "'But' introduces a contrast." },
+                { q: "Synonym of 'Essential'?", opts: ["Optional", "Necessary", "Trivial", "Extra"], a: 1, expl: "Essential means absolutely necessary." },
+                { q: "Plural form of 'child'?", opts: ["Childs", "Children", "Childrens", "Childes"], a: 1, expl: "'Children' is the irregular plural of 'child'." },
+                { q: "Antonym of 'Brave'?", opts: ["Strong", "Cowardly", "Bold", "Fearless"], a: 1, expl: "Cowardly is the opposite of brave." },
+                { q: "Which is a compound sentence?", opts: ["I run.", "Max plays, and Sue sings.", "Running fast.", "The big dog."], a: 1, expl: "It has two independent clauses joined by ', and'." },
+                { q: "Pronoun in 'Sara hurt herself.'", opts: ["Sara", "hurt", "herself", "None"], a: 2, expl: "'Herself' is a reflexive pronoun." },
+                { q: "Correct verb: 'She ___ to the store yesterday.'", opts: ["go", "goes", "went", "gone"], a: 2, expl: "'Yesterday' implies past tense, so 'went'." },
+                { q: "Comparative form of 'good'?", opts: ["Gooder", "Better", "Best", "More good"], a: 1, expl: "Good -> Better -> Best." },
+                { q: "Figure of speech: 'Time is money.'", opts: ["Simile", "Metaphor", "Personification", "Hyperbole"], a: 1, expl: "It directly compares time to money without using 'like' or 'as'." },
+                { q: "Prefix meaning 'not'?", opts: ["Re-", "Un-", "Pre-", "Bi-"], a: 1, expl: "'Un-' means not (e.g., unhappy)." },
+                { q: "Correct spelling?", opts: ["Recieve", "Receive", "Riceive", "Receeve"], a: 1, expl: "'I before E except after C'." },
+                { q: "Adverb in 'He runs quickly.'", opts: ["He", "runs", "quickly", "is"], a: 2, expl: "'Quickly' describes how he runs." },
+                { q: "Meaning of 'break a leg'?", opts: ["Get hurt", "Good luck", "Give up", "Dance"], a: 1, expl: "It is an idiom meaning 'good luck'." },
+                { q: "Identify the noun: 'Happiness is key.'", opts: ["is", "key", "Happiness", "None"], a: 2, expl: "'Happiness' is an abstract noun." },
+                { q: "Simple future of 'eat'?", opts: ["ate", "eating", "will eat", "eaten"], a: 2, expl: "'Will' + base verb indicates future." },
+                { q: "Which word is an adjective?", opts: ["Run", "Blue", "Cat", "Quickly"], a: 1, expl: "'Blue' describes a noun (e.g., blue sky)." },
+                { q: "Homophone for 'sun'?", opts: ["soon", "son", "seen", "sane"], a: 1, expl: "'Son' sounds exactly like 'sun'." },
+                { q: "The lesson of a story is the...?", opts: ["Plot", "Setting", "Theme", "Character"], a: 2, expl: "The theme often conveys the moral or lesson." }
+            ],
+            "Filipino": [
+                { q: "Alin ang Pandiwa sa pangungusap?", opts: ["Masaya", "Takbo", "Bahay", "Kami"], a: 1, expl: "'Takbo' ay kilos." },
+                { q: "Kasingkahulugan ng 'marikit'?", opts: ["Maganda", "Mabaho", "Mainit", "Malungkot"], a: 0, expl: "Marikit means beautiful or lovely." },
+                { q: "Ama ng Wikang Pambansa?", opts: ["Rizal", "Quezon", "Bonifacio", "Aguinaldo"], a: 1, expl: "Manuel L. Quezon designated Tagalog as basis for national language." },
+                { q: "Salitang ugat ng 'lumakad'?", opts: ["lakad", "lum", "akad", "la"], a: 0, expl: "Lakad + -um- infix." },
+                { q: "Kailan ginagamit ang 'ng'?", opts: ["Bilang pang-ukol", "Bilang pantukoy", "Bilang pangatnig", "Wala sa nabanggit"], a: 0, expl: "'Ng' marks the object or possession." },
+                { q: "Kasalungat ng 'masipag'?", opts: ["Mabait", "Tamad", "Matalino", "Masaya"], a: 1, expl: "Masipag (industrious) vs Tamad (lazy)." },
+                { q: "Bahagi ng pananalita na naglalarawan.", opts: ["Pangngalan", "Pandiwa", "Pang-uri", "Pang-abay"], a: 2, expl: "Pang-uri (Adjective) describes nouns." },
+                { q: "Uri ng pangungusap na nagtatanong.", opts: ["Pasalaysay", "Patanong", "Pautos", "Padamdam"], a: 1, expl: "Patanong asks a question." },
+                { q: "Panghalip panao para sa sarili.", opts: ["Ikaw", "Siya", "Ako", "Sila"], a: 2, expl: "'Ako' means I/me." },
+                { q: "Tamang baybay ng salita.", opts: ["Himpapawid", "Himpapawir", "Himpapawed", "Himpapawd"], a: 0, expl: "Himpapawid means sky/air." },
+                { q: "Alin ang hiram na salita?", opts: ["Bahay", "Computer", "Aso", "Langit"], a: 1, expl: "'Computer' is borrowed from English." },
+                { q: "Simuno sa 'Si Ana ay nagbabasa.'", opts: ["Ana", "nagbabasa", "ay", "Si"], a: 0, expl: "Ana is the one doing the action." },
+                { q: "Tambalang salita: 'Bahaghari'", opts: ["Bahag + Hari", "Baha + Ghari", "Ba + Haghari", "Wala"], a: 0, expl: "Bahag (loincloth) + Hari (king) = Rainbow." },
+                { q: "Tayutay: 'Bumaha ng luha.'", opts: ["Pagtutulad", "Pagmamalabis", "Pagtataao", "Pagwawangis"], a: 1, expl: "Pagmamalabis (Hyperbole) - exaggerating." },
+                { q: "Kaantasan ng pang-uri: 'Pinakamaganda'", opts: ["Lantay", "Pahambing", "Pasukdol", "Wala"], a: 2, expl: "Pasukdol shows the highest degree (Pinaka-)." },
+                { q: "Salitang kilos sa 'Tumakbo ang bata.'", opts: ["Bata", "Ang", "Tumakbo", "Wala"], a: 2, expl: "Tumakbo indicates action." },
+                { q: "Pang-ugnay na ginagamit sa pagbubukod.", opts: ["At", "O", "Dahil", "Kasi"], a: 1, expl: "'O' (or) offers a choice." },
+                { q: "Ilan ang patinig sa Alfabetong Filipino?", opts: ["3", "4", "5", "6"], a: 2, expl: "A, E, I, O, U." },
+                { q: "May lapi sa salitang 'mahusay'?", opts: ["ma-", "-in", "-an", "maka-"], a: 0, expl: "Ma- + husay." },
+                { q: "Paksa o tema ng kwento.", opts: ["Tauhan", "Tagpuan", "Banghay", "Kaisipan"], a: 3, expl: "Kaisipan refers to the theme or thought." }
+            ],
+            "Araling Panlipunan": [
+                { q: "Nagtatag ng KKK o Katipunan?", opts: ["Rizal", "Mabini", "Bonifacio", "Jacinto"], a: 2, expl: "Andres Bonifacio founded the KKK." },
+                { q: "Araw ng Kasarinlan ng Pilipinas?", opts: ["June 12", "July 4", "Aug 21", "Dec 30"], a: 0, expl: "Declared on June 12, 1898 in Kawit, Cavite." },
+                { q: "Uri ng pamahalaan ng Pilipinas?", opts: ["Monarkiya", "Demokratiko", "Komunista", "Pederal"], a: 1, expl: "The Philippines is a democratic republic." },
+                { q: "Pambansang Bayani ng Pilipinas?", opts: ["Bonifacio", "Rizal", "Luna", "Del Pilar"], a: 1, expl: "Dr. Jose Rizal." },
+                { q: "Unang Presidente ng Republika?", opts: ["Quezon", "Aguinaldo", "Roxas", "Osmena"], a: 1, expl: "Emilio Aguinaldo was the first president." },
+                { q: "Sino ang 'Utak ng Katipunan'?", opts: ["Mabini", "Jacinto", "Bonifacio", "Rizal"], a: 1, expl: "Emilio Jacinto." },
+                { q: "Sino ang 'Dakilang Lumpo'?", opts: ["Jacinto", "Mabini", "Luna", "Aguinaldo"], a: 1, expl: "Apolinario Mabini." },
+                { q: "Kailan idineklara ang Martial Law?", opts: ["1972", "1986", "1945", "1898"], a: 0, expl: "Declared by Marcos on Sept 21, 1972." },
+                { q: "Saan naganap ang 'Cry of Pugad Lawin'?", opts: ["Cavite", "Manila", "Quezon City", "Bulacan"], a: 2, expl: "It happened in Quezon City." },
+                { q: "Paganap na nagpatalsik kay Marcos.", opts: ["EDSA 1", "EDSA 2", "World War 2", "Martial Law"], a: 0, expl: "EDSA People Power Revolution of 1986." },
+                { q: "Ilang bituin mayroon ang watawat?", opts: ["2", "3", "4", "5"], a: 1, expl: "Three stars representing Luzon, Visayas, Mindanao." },
+                { q: "Ano ang sinisimbolo ng araw sa watawat?", opts: ["Kalayaan", "8 Lalawigan", "3 Pulo", "Katapangan"], a: 1, expl: "The sun's 8 rays represent the 8 provinces that revolted." },
+                { q: "Pambansang ibon ng Pilipinas.", opts: ["Maya", "Agila", "Kalapati", "Loro"], a: 1, expl: "The Philippine Eagle." },
+                { q: "Pinakamataas na bundok sa Pilipinas.", opts: ["Apo", "Mayon", "Pinatubo", "Taal"], a: 0, expl: "Mt. Apo in Mindanao." },
+                { q: "Rehiyon na tinaguriang 'Salad Bowl'.", opts: ["Benguet", "Davao", "Cebu", "Ilocos"], a: 0, expl: "Benguet is known for its vegetables." },
+                { q: "Pambansang bulaklak.", opts: ["Santan", "Gumamela", "Sampaguita", "Rosas"], a: 2, expl: "Sampaguita is the national flower." },
+                { q: "Sino ang namuno sa Mactan laban kay Magellan?", opts: ["Humabon", "Lapu-Lapu", "Sikatuna", "Sulayman"], a: 1, expl: "Lapu-Lapu defeated Magellan." },
+                { q: "Batas na nagbigay ng kalayaan sa Pilipinas 1946.", opts: ["Tydings-McDuffie", "Jones Law", "Bell Trade", "Hare-Hawes-Cutting"], a: 0, expl: "The Tydings-McDuffie Act provided for independence." },
+                { q: "Ilan ang sangay ng pamahalaan?", opts: ["2", "3", "4", "5"], a: 1, expl: "Executive, Legislative, Judicial." },
+                { q: "Kasalukuyang Saligang Batas.", opts: ["1935", "1973", "1987", "1899"], a: 2, expl: "The 1987 Constitution." }
+            ]
+        };
+
+        // --- SOUND MANAGER (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        const Sound = {
+            playTone: (freq, type, duration, vol = 0.1) => {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            },
+            correct: () => {
+                Sound.playTone(600, 'sine', 0.1);
+                setTimeout(() => Sound.playTone(800, 'sine', 0.2), 100);
+            },
+            wrong: () => {
+                Sound.playTone(150, 'sawtooth', 0.3, 0.2);
+            },
+            victory: () => {
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                    setTimeout(() => Sound.playTone(freq, 'square', 0.4, 0.15), i * 150);
+                });
+            }
+        };
+
+        // --- CONFETTI EFFECT ---
+        function launchConfetti() {
+            const colors = ['#4D96FF', '#FFD93D', '#6BCB77', '#FF6B6B', '#FF1493'];
+            const container = document.body;
+
+            for (let i = 0; i < 150; i++) {
+                const confetto = document.createElement('div');
+                confetto.style.position = 'fixed';
+                confetto.style.width = (Math.random() * 8 + 5) + 'px';
+                confetto.style.height = confetto.style.width;
+                confetto.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetto.style.left = Math.random() * 100 + 'vw';
+                confetto.style.top = '-20px';
+                confetto.style.borderRadius = '50%';
+                confetto.style.pointerEvents = 'none';
+                confetto.style.zIndex = '9999';
+                confetto.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+                // Animation
+                const duration = Math.random() * 2 + 2;
+                const endX = (Math.random() * 200) - 100;
+
+                confetto.style.transition = `all ${duration}s cubic-bezier(0.25, 1, 0.5, 1)`;
+                container.appendChild(confetto);
+
+                // Trigger
+                setTimeout(() => {
+                    confetto.style.top = '110vh';
+                    confetto.style.transform = `translate(${endX}px, 0) rotate(${Math.random() * 720}deg)`;
+                    confetto.style.opacity = '0';
+                }, 100);
+
+                setTimeout(() => {
+                    confetto.remove();
+                }, duration * 1000 + 100);
+            }
+        }
+
+        // --- APP STATE ---
+        let currentSubjectIndex = 0;
+        let globalScore = 0;
+        let mode = 'standard'; // 'standard' or 'review'
+
+        // For Review Mode
+        let currentReviewQIndex = 0;
+        let currentReviewQuestions = [];
+
+        // --- DOM REFERENCES ---
+        const startScreen = document.getElementById('start-screen');
+        const transitionScreen = document.getElementById('subject-transition-screen');
+        const quizListScreen = document.getElementById('quiz-list-screen');
+        const reviewModeScreen = document.getElementById('review-mode-screen');
+        const scoreScreen = document.getElementById('score-screen');
+
+        const questionsList = document.getElementById('questions-list');
+
+        const transitionTitle = document.getElementById('transition-title');
+        const currentSubjectTitle = document.getElementById('current-subject-title');
+
+        const fabContainer = document.getElementById('fab-container');
+        const fabBtn = document.getElementById('fab-btn');
+
+        const finalScore = document.getElementById('final-score');
+        const totalScore = document.getElementById('total-score');
+        const scoreMessage = document.getElementById('score-message');
+
+        // Review Mode Elements
+        const rmCardContainer = document.getElementById('rm-card-container');
+        const rmFeedback = document.getElementById('rm-feedback');
+        const rmFeedbackTitle = document.getElementById('rm-feedback-title');
+        const rmFeedbackText = document.getElementById('rm-feedback-text');
+        const rmNextBtn = document.getElementById('rm-next-btn');
+        const rmSubjectTitle = document.getElementById('rm-subject-title');
+        const rmQNum = document.getElementById('rm-q-num');
+
+        // --- LOGIC ---
+
+        function startFlow(selectedMode) {
+            mode = selectedMode;
+            currentSubjectIndex = 0;
+            globalScore = 0;
+
+            // Hide Start
+            startScreen.classList.remove('active');
+
+            // Start Sequence
+            playSubjectSequence();
+        }
+
+        function playSubjectSequence() {
+            if (currentSubjectIndex >= subjects.length) {
+                finishEntireReview();
+                return;
+            }
+
+            const subject = subjects[currentSubjectIndex];
+
+            // 1. Show Transition Screen (Fade In)
+            quizListScreen.classList.remove('active');
+            reviewModeScreen.classList.remove('active');
+            fabContainer.style.display = 'none';
+
+            transitionTitle.textContent = subject;
+            transitionScreen.style.display = 'flex';
+            // Force reflow for transition
+            void transitionScreen.offsetWidth;
+            transitionScreen.style.opacity = '1';
+
+            // 2. Wait 2 seconds, then fade out and show content
+            setTimeout(() => {
+                transitionScreen.style.opacity = '0';
+
+                // Wait for fade out transition (0.8s) to complete before hiding
+                setTimeout(() => {
+                    transitionScreen.style.display = 'none';
+                    if (mode === 'standard') {
+                        loadStandardSubject(subject);
+                    } else {
+                        loadReviewSubject(subject);
+                    }
+                }, 800);
+            }, 1500);
+        }
+
+        // --- STANDARD MODE LOGIC ---
+        function loadStandardSubject(subject) {
+            currentSubjectTitle.textContent = subject;
+            currentSubjectTitle.style.color = getSubjectColor(subject);
+            questionsList.innerHTML = '';
+
+            let subjectQuestions = [...db[subject]];
+            subjectQuestions.sort(() => Math.random() - 0.5);
+
+            subjectQuestions.forEach((q, idx) => {
+                const card = createCard(q, idx, subject, false);
+                questionsList.appendChild(card);
+            });
+
+            updateCtaButton();
+            quizListScreen.classList.add('active');
+            fabContainer.style.display = 'flex';
+            window.scrollTo(0, 0);
+        }
+
+        // --- REVIEW MODE LOGIC ---
+        function loadReviewSubject(subject) {
+            // Init Review Mode State for this subject
+            currentReviewQIndex = 0;
+            currentReviewQuestions = [...db[subject]];
+            currentReviewQuestions.sort(() => Math.random() - 0.5);
+
+            reviewModeScreen.classList.add('active');
+            rmSubjectTitle.textContent = subject;
+            rmSubjectTitle.style.color = getSubjectColor(subject);
+
+            showReviewQuestion();
+        }
+
+        function showReviewQuestion() {
+            const subject = subjects[currentSubjectIndex];
+            const q = currentReviewQuestions[currentReviewQIndex];
+
+            rmQNum.textContent = currentReviewQIndex + 1;
+            rmCardContainer.innerHTML = ''; // clear previous
+            rmFeedback.style.display = 'none'; // hide feedback
+
+            // Create a single card
+            const card = createCard(q, currentReviewQIndex, subject, true);
+            rmCardContainer.appendChild(card);
+            window.scrollTo(0, 0);
+        }
+
+        function handleReviewAnswer(isCorrect, explanation, correctAnswerText) {
+            rmFeedback.style.display = 'block';
+            if (isCorrect) {
+                rmFeedbackTitle.textContent = "Correct! 🎉";
+                rmFeedbackTitle.style.color = "var(--success-color)";
+                rmFeedbackText.innerHTML = explanation || "Good job!";
+                globalScore++;
+            } else {
+                rmFeedbackTitle.textContent = "Incorrect";
+                rmFeedbackTitle.style.color = "var(--error-color)";
+                rmFeedbackText.innerHTML = `<strong>Correct Answer:</strong> ${correctAnswerText}<br><br>${explanation}`;
+            }
+        }
+
+        function nextReviewQuestion() {
+            currentReviewQIndex++;
+            if (currentReviewQIndex >= currentReviewQuestions.length) {
+                // End of Subject
+                nextSubject();
+            } else {
+                showReviewQuestion();
+            }
+        }
+
+        // --- SHARED UI LOGIC ---
+
+        function createCard(q, index, subject, isReviewMode) {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `q-${index}`;
+
+            // Header
+            const header = document.createElement('div');
+            header.className = 'card-header';
+            const badge = document.createElement('span');
+            badge.className = 'question-category';
+            badge.textContent = subject;
+            badge.style.color = getSubjectColor(subject);
+            badge.style.backgroundColor = getSubjectColor(subject) + '15';
+            const number = document.createElement('span');
+            number.className = 'question-number';
+            number.textContent = `#${index + 1}`;
+            header.appendChild(badge);
+            header.appendChild(number);
+
+            // Text
+            const text = document.createElement('h3');
+            text.className = 'question-text';
+            text.textContent = q.q;
+
+            // Options
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'options-grid';
+
+            q.opts.forEach((optText, optIdx) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-option';
+                btn.textContent = optText;
+
+                btn.onclick = function () {
+                    const allBtns = card.querySelectorAll('.btn-option');
+                    if (btn.disabled) return;
+
+                    // Check answer
+                    const isCorrect = (optIdx === q.a);
+                    if (isCorrect) {
+                        btn.classList.add('correct');
+                        Sound.correct();
+                        if (!isReviewMode) globalScore++;
+                    } else {
+                        btn.classList.add('wrong');
+                        allBtns[q.a].classList.add('correct');
+                        Sound.wrong();
+                    }
+
+                    allBtns.forEach(b => b.disabled = true);
+
+                    // Review Mode Trigger
+                    if (isReviewMode) {
+                        handleReviewAnswer(isCorrect, q.expl, q.opts[q.a]);
+                    }
+                };
+                optionsDiv.appendChild(btn);
+            });
+
+            card.appendChild(header);
+            card.appendChild(text);
+            card.appendChild(optionsDiv);
+            return card;
+        }
+
+        function updateCtaButton() {
+            if (currentSubjectIndex === subjects.length - 1) {
+                fabBtn.innerHTML = "<span>✨ Finish Review</span>";
+            } else {
+                fabBtn.innerHTML = "<span>Next Subject ➡️</span>";
+            }
+        }
+
+        function nextSubject() {
+            currentSubjectIndex++;
+            playSubjectSequence();
+        }
+
+        function finishEntireReview() {
+            quizListScreen.classList.remove('active');
+            reviewModeScreen.classList.remove('active');
+            fabContainer.style.display = 'none';
+            scoreScreen.classList.add('active');
+
+            const totalPossible = subjects.length * 20;
+
+            finalScore.textContent = globalScore;
+            totalScore.textContent = totalPossible;
+
+            const p = (globalScore / totalPossible) * 100;
+
+            if (p >= 90) scoreMessage.textContent = "Outstanding! You are ready! 🌟";
+            else if (p >= 75) scoreMessage.textContent = "Great job! Keep it up! 👍";
+            else if (p >= 50) scoreMessage.textContent = "Good effort! A little more review. 📚";
+            else scoreMessage.textContent = "Keep practicing! You can do it! 💪";
+
+            window.scrollTo(0, 0);
+
+            // Celebration Sound & Confetti
+            setTimeout(() => {
+                Sound.victory();
+                launchConfetti();
+            }, 500);
+        }
+
+        function restartQuiz() {
+            startScreen.classList.add('active'); // Go back to start to choose mode
+            scoreScreen.classList.remove('active');
+            // Remove confetti? Confetti removes itself.
+        }
+
+        function getSubjectColor(subject) {
+            switch (subject) {
+                case 'Mathematics': return '#E67E22';
+                case 'Science': return '#27AE60';
+                case 'English': return '#2980B9';
+                case 'Filipino': return '#9B59B6';
+                case 'Araling Panlipunan': return '#C0392B';
+                default: return '#4A90E2';
+            }
+        }
+    </script>
+
+</body>
+
+</html>
