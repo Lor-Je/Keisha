@@ -19,7 +19,7 @@
             </h1>
             <p style="margin-bottom: 20px; max-width: 500px;">
                 Practice Math, Science, English, Filipino, and AP.<br>
-                <strong>20 Questions per Subject (Randomized from Pool).</strong>
+                <strong>20 Questions per Subject (Total Random Mix).</strong>
             </p>
             <button class="btn-primary" onclick="startFlow('standard')">Standard Review</button>
             <button class="btn-primary" style="margin-top: 10px; background-color: #2ECC71;"
@@ -360,36 +360,51 @@
             const optionsDiv = document.createElement('div');
             optionsDiv.className = 'options-grid';
 
-            q.opts.forEach((optText, optIdx) => {
+            // --- OPTION SHUFFLING LOGIC START ---
+            // 1. Map options to preserve original index (which 'q.a' points to)
+            const shuffledOptions = q.opts.map((opt, i) => ({ text: opt, originalIdx: i }));
+
+            // 2. Shuffle the options array
+            shuffledOptions.sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach((optObj) => {
                 const btn = document.createElement('button');
                 btn.className = 'btn-option';
-                btn.textContent = optText;
+                btn.textContent = optObj.text;
+
+                // Mark the correct button in DOM for easy retrieval later
+                if (optObj.originalIdx === q.a) {
+                    btn.dataset.correct = "true";
+                }
 
                 btn.onclick = function () {
                     const allBtns = card.querySelectorAll('.btn-option');
                     if (btn.disabled) return;
 
-                    // Check answer
-                    const isCorrect = (optIdx === q.a);
+                    const isCorrect = (optObj.originalIdx === q.a);
+
                     if (isCorrect) {
                         btn.classList.add('correct');
                         Sound.correct();
                         if (!isReviewMode) globalScore++;
                     } else {
                         btn.classList.add('wrong');
-                        allBtns[q.a].classList.add('correct');
+                        // Find the correct button using dataset
+                        const correctBtn = card.querySelector('button[data-correct="true"]');
+                        if (correctBtn) correctBtn.classList.add('correct');
+
                         Sound.wrong();
                     }
 
                     allBtns.forEach(b => b.disabled = true);
 
-                    // Review Mode Trigger
                     if (isReviewMode) {
                         handleReviewAnswer(isCorrect, q.expl, q.opts[q.a]);
                     }
                 };
                 optionsDiv.appendChild(btn);
             });
+            // --- OPTION SHUFFLING LOGIC END ---
 
             card.appendChild(header);
             card.appendChild(text);
