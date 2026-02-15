@@ -249,7 +249,10 @@
             if (countdownEl) countdownEl.textContent = "";
             if (transitionMsg) transitionMsg.textContent = "Selecting Subject...";
             transitionTitle.textContent = "Randomizing...";
-            transitionTitle.style.color = "#333";
+            transitionTitle.style.color = "#fff"; // White text for colored bg
+
+            // Start Dark
+            transitionScreen.style.backgroundColor = "#111";
 
             transitionScreen.style.display = 'flex';
             // Force reflow
@@ -265,9 +268,12 @@
                 // Pick a random subject name to show
                 const randomSub = subjects[Math.floor(Math.random() * subjects.length)];
                 transitionTitle.textContent = randomSub;
-                transitionTitle.style.color = getSubjectColor(randomSub);
 
-                // Optional soft tick
+                // CHANGE BG COLOR
+                const subColor = getSubjectColor(randomSub);
+                transitionScreen.style.backgroundColor = subColor;
+
+                // Tick
                 Sound.tick();
 
                 rolls++;
@@ -276,7 +282,9 @@
 
                     // LAND ON TARGET
                     transitionTitle.textContent = targetSubject;
-                    transitionTitle.style.color = getSubjectColor(targetSubject);
+                    const finalColor = getSubjectColor(targetSubject);
+                    transitionScreen.style.backgroundColor = finalColor;
+
                     if (transitionMsg) transitionMsg.textContent = "Get Ready!";
                     Sound.correct(); // Ding!
 
