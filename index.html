@@ -29,7 +29,10 @@
         <!-- Subject Transition Screen -->
         <div id="subject-transition-screen">
             <h1 id="transition-title">Subject Name</h1>
-            <p>Get ready...</p>
+            <div id="countdown-display"
+                style="font-size: 6rem; font-weight: 800; margin-top: 10px; color: #fff; text-shadow: 4px 4px 0 rgba(0,0,0,0.2);">
+            </div>
+            <p id="transition-msg" style="font-size: 1.2rem; opacity: 0.9;">Get ready...</p>
         </div>
 
         <!-- Quiz List Screen (The Scrollable "Quizlet" View) -->
@@ -124,6 +127,12 @@
                 [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
                     setTimeout(() => Sound.playTone(freq, 'square', 0.4, 0.15), i * 150);
                 });
+            },
+            tick: () => {
+                Sound.playTone(400, 'sine', 0.1, 0.2);
+            },
+            go: () => {
+                Sound.playTone(800, 'sine', 0.4, 0.2);
             }
         };
 
@@ -230,25 +239,48 @@
             fabContainer.style.display = 'none';
 
             transitionTitle.textContent = subject;
+
+            // Countdown Setup
+            const countdownEl = document.getElementById('countdown-display');
+            if (countdownEl) countdownEl.textContent = "3";
+
             transitionScreen.style.display = 'flex';
             // Force reflow for transition
             void transitionScreen.offsetWidth;
             transitionScreen.style.opacity = '1';
 
-            // 2. Wait 2 seconds, then fade out and show content
-            setTimeout(() => {
-                transitionScreen.style.opacity = '0';
+            // 2. Countdown Loop
+            let count = 3;
+            // Immediate tick for 3
+            if (countdownEl) {
+                countdownEl.textContent = count;
+                Sound.tick();
+            }
 
-                // Wait for fade out transition (0.8s) to complete before hiding
-                setTimeout(() => {
-                    transitionScreen.style.display = 'none';
-                    if (mode === 'standard') {
-                        loadStandardSubject(subject);
-                    } else {
-                        loadReviewSubject(subject);
-                    }
-                }, 800);
-            }, 1500);
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    if (countdownEl) countdownEl.textContent = count;
+                    Sound.tick();
+                } else {
+                    clearInterval(timer);
+                    if (countdownEl) countdownEl.textContent = "GO!";
+                    Sound.go();
+
+                    // Wait a moment then start
+                    setTimeout(() => {
+                        transitionScreen.style.opacity = '0';
+                        setTimeout(() => {
+                            transitionScreen.style.display = 'none';
+                            if (mode === 'standard') {
+                                loadStandardSubject(subject);
+                            } else {
+                                loadReviewSubject(subject);
+                            }
+                        }, 500); // fade out duration
+                    }, 500); // show "GO!" duration
+                }
+            }, 1000);
         }
 
         // --- STANDARD MODE LOGIC ---
