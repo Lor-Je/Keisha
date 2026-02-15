@@ -3,17 +3,12 @@
 :root {
     /* Kid Friendly Palette */
     --primary-color: #4D96FF;
-    /* Bright Blue */
     --primary-dark: #2a75d9;
     --accent-color: #FFD93D;
-    /* Bright Yellow */
     --secondary-color: #E0F7FA;
-    /* Light Cloud Blue Background */
     --text-color: #2D3436;
     --success-color: #6BCB77;
-    /* Fun Green */
     --error-color: #FF6B6B;
-    /* Soft Red */
     --card-bg: #FFFFFF;
     --font-family: 'Fredoka', 'Comic Sans MS', cursive, sans-serif;
 
@@ -39,41 +34,51 @@ body {
     color: var(--text-color);
     line-height: 1.6;
     min-height: 100vh;
-    padding: 20px;
-    padding-bottom: 100px;
-    /* Space for the floating button */
+    padding: 15px;
+    /* Reduced padding */
+    padding-bottom: 120px;
+    /* More space for FAB */
+    font-size: 16px;
+    /* Base font size */
 }
 
 /* Container */
 .app-container {
     width: 100%;
-    max-width: 700px;
+    max-width: 600px;
+    /* Reduce max width for better mobile reading */
     margin: 0 auto;
 }
 
 /* Header */
 header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
+    /* Reduced margin */
     color: var(--text-color);
     padding: 15px;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.85);
+    /* Slightly more opaque */
     border-radius: 20px;
     backdrop-filter: blur(5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    /* Softer shadow */
 }
 
 header h1 {
     color: var(--primary-color);
-    font-size: 2.2rem;
+    font-size: 1.8rem;
+    /* Scaled down */
     font-weight: 700;
     text-shadow: 2px 2px 0px #CBE2FF;
     margin-bottom: 5px;
+    line-height: 1.2;
 }
 
 header p {
     color: #555;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
+    /* Scaled down */
     font-weight: 600;
 }
 
@@ -81,7 +86,7 @@ header p {
 .screen {
     display: none;
     flex-direction: column;
-    animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .screen.active {
@@ -90,7 +95,7 @@ header p {
 
 @keyframes bounceIn {
     0% {
-        transform: scale(0.8);
+        transform: scale(0.95);
         opacity: 0;
     }
 
@@ -103,19 +108,21 @@ header p {
 /* Question Cards */
 .question-card {
     background: var(--card-bg);
-    border-radius: 25px;
+    border-radius: 20px;
+    /* Slightly reduced radius */
     border: 3px solid #E5E5E5;
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.05);
-    /* Softer shadow */
-    padding: 25px;
-    margin-bottom: 25px;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    /* Reduced padding */
+    margin-bottom: 20px;
+    transition: transform 0.2s;
     position: relative;
     overflow: hidden;
 }
 
 .question-card:hover {
-    transform: translateY(-5px) rotate(1deg);
+    transform: translateY(-2px);
+    /* Subtle lift */
     border-color: var(--primary-color);
 }
 
@@ -128,24 +135,24 @@ header p {
 }
 
 .question-category {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
-    padding: 6px 12px;
-    border-radius: 50px;
+    padding: 5px 10px;
+    border-radius: 12px;
     background: #E8F0FE;
     color: var(--primary-color);
-    border: 2px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .question-number {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: #888;
     font-weight: 700;
     background: #f0f0f0;
-    width: 35px;
-    height: 35px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -154,9 +161,10 @@ header p {
 
 /* Question Text */
 .question-text {
-    font-size: 1.3rem;
+    font-size: 1.15rem;
+    /* Better for reading on small screens */
     font-weight: 600;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     color: var(--text-color);
     line-height: 1.4;
 }
@@ -164,34 +172,37 @@ header p {
 /* Options Grid */
 .options-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    grid-template-columns: 1fr;
+    /* Default to single column mobile-first */
+    gap: 12px;
 }
 
-@media (max-width: 600px) {
+@media (min-width: 600px) {
     .options-grid {
-        grid-template-columns: 1fr;
-        /* Stack on mobile */
+        grid-template-columns: 1fr 1fr;
+        /* Two columns on larger screens */
     }
 }
 
 /* Answer Buttons (Bubbly) */
 .btn-option {
-    padding: 15px 20px;
+    padding: 16px 18px;
+    /* Larger vertical target */
     border: none;
-    border-radius: 15px;
+    border-radius: 16px;
     background: #F0F4F8;
     color: var(--text-color);
     font-family: var(--font-family);
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.2s, transform 0.1s;
     text-align: left;
     position: relative;
     box-shadow: 0 4px 0 #D1D9E6;
-    /* 3D bottom */
-    transform-style: preserve-3d;
+    /* Consistent 3D effect */
+    width: 100%;
+    /* Full width */
 }
 
 .btn-option:active {
@@ -222,7 +233,6 @@ header p {
 .btn-option:disabled {
     cursor: default;
     transform: none;
-    /* No bounce when disabled */
 }
 
 /* Primary Action Buttons */
@@ -230,42 +240,45 @@ header p {
     background: var(--primary-color);
     color: white;
     border: none;
-    padding: 18px 32px;
-    font-size: 1.2rem;
+    padding: 16px 20px;
+    /* Touch friendly */
+    font-size: 1.1rem;
     font-weight: 700;
     font-family: var(--font-family);
-    border-radius: 20px;
+    border-radius: 16px;
     cursor: pointer;
-    box-shadow: 0 6px 0 var(--primary-dark);
+    box-shadow: 0 5px 0 var(--primary-dark);
     transition: transform 0.1s;
     width: 100%;
     display: block;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 .btn-primary:active {
-    transform: translateY(6px);
+    transform: translateY(5px);
     box-shadow: none;
 }
 
 /* Start Screen Centering */
 #start-screen {
-    min-height: 80vh;
+    min-height: auto;
+    margin-top: 10vh;
+    /* Better vertical alignment */
     justify-content: center;
     align-items: center;
     text-align: center;
     background: white;
     border-radius: 30px;
-    padding: 40px;
+    padding: 30px;
     box-shadow: var(--shadow-pop);
     border: 4px solid #fff;
-    margin-top: 20px;
 }
 
 #start-screen .icon {
-    font-size: 6rem;
-    margin-bottom: 20px;
+    font-size: 4.5rem;
+    /* Smaller icon */
+    margin-bottom: 15px;
     display: block;
     animation: float 3s ease-in-out infinite;
 }
@@ -276,7 +289,7 @@ header p {
     }
 
     50% {
-        transform: translateY(-15px);
+        transform: translateY(-10px);
     }
 
     100% {
@@ -286,34 +299,35 @@ header p {
 
 /* Score Screen */
 #score-screen {
-    min-height: 60vh;
+    min-height: auto;
+    margin-top: 10vh;
     justify-content: center;
     align-items: center;
     text-align: center;
     background: white;
     border-radius: 30px;
-    padding: 40px;
+    padding: 30px;
     box-shadow: var(--shadow-pop);
-    margin-top: 20px;
     border: 4px solid var(--accent-color);
 }
 
 .score-display {
-    font-size: 6rem;
+    font-size: 4rem;
+    /* Smaller display */
     font-weight: 800;
     color: var(--primary-color);
-    margin: 20px 0;
+    margin: 15px 0;
     line-height: 1;
-    text-shadow: 4px 4px 0 #CBE2FF;
+    text-shadow: 3px 3px 0 #CBE2FF;
 }
 
 /* Floating Finish Button */
 .fab-container {
     position: fixed;
-    bottom: 25px;
+    bottom: 20px;
     left: 0;
     width: 100%;
-    padding: 0 20px;
+    padding: 0 15px;
     display: flex;
     justify-content: center;
     pointer-events: none;
@@ -325,22 +339,26 @@ header p {
     background: var(--accent-color);
     color: #444;
     border: 3px solid #444;
-    padding: 15px 40px;
+    padding: 14px 30px;
+    /* Touch friendly */
     border-radius: 50px;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 800;
     font-family: var(--font-family);
-    box-shadow: 0 6px 0 #444;
+    box-shadow: 0 5px 0 #444;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     transition: transform 0.1s;
     text-transform: uppercase;
+    width: auto;
+    min-width: 200px;
+    justify-content: center;
 }
 
 .btn-fab:active {
-    transform: translateY(6px);
+    transform: translateY(5px);
     box-shadow: none;
 }
 
@@ -357,14 +375,14 @@ header p {
 }
 
 #rm-feedback {
-    border-radius: 20px;
-    border: 3px solid;
+    border-radius: 16px;
+    border: 2px solid #ddd;
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes popIn {
     from {
-        transform: scale(0.8);
+        transform: scale(0.9);
         opacity: 0;
     }
 
@@ -382,7 +400,6 @@ header p {
     width: 100%;
     height: 100%;
     background: var(--primary-color);
-    /* Overwritten by JS inline style usually */
     color: white;
     z-index: 200;
     display: none;
@@ -391,22 +408,60 @@ header p {
     flex-direction: column;
     text-align: center;
     transition: opacity 0.8s ease;
+    padding: 20px;
 }
 
 #subject-transition-screen h1 {
-    font-size: 4rem;
+    font-size: 2.5rem;
+    /* Scaled down heavily for mobile */
     color: white;
     margin: 0;
     text-transform: uppercase;
     letter-spacing: 2px;
-    text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+    text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
     font-family: 'Fredoka', cursive;
+    word-wrap: break-word;
+    /* Prevent overflow */
 }
 
 #subject-transition-screen p {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     background: rgba(255, 255, 255, 0.2);
-    padding: 5px 20px;
+    padding: 5px 15px;
     border-radius: 20px;
     margin-top: 15px;
+}
+
+/* Mobile-Specific Tweaks */
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+        padding-bottom: 100px;
+    }
+
+    header h1 {
+        font-size: 1.5rem;
+    }
+
+    .question-card {
+        padding: 15px;
+    }
+
+    .question-text {
+        font-size: 1.1rem;
+    }
+
+    .btn-option {
+        padding: 14px 15px;
+        font-size: 0.95rem;
+    }
+
+    .score-display {
+        font-size: 3.5rem;
+    }
+
+    #start-screen {
+        margin-top: 5vh;
+        padding: 20px;
+    }
 }
