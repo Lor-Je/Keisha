@@ -97,7 +97,7 @@
         /* 
            DATA is now loaded from questions.js (variable 'db')
         */
-        const subjects = ["Mathematics", "Science", "English", "Filipino", "Araling Panlipunan"];
+        let subjects = ["Mathematics", "Science", "English", "Filipino", "Araling Panlipunan"];
 
         // --- SOUND MANAGER (Web Audio API) ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -218,6 +218,9 @@
             currentSubjectIndex = 0;
             globalScore = 0;
 
+            // Randomize Subjects Order for this session
+            subjects.sort(() => Math.random() - 0.5);
+
             // Hide Start
             startScreen.classList.remove('active');
 
@@ -231,23 +234,63 @@
                 return;
             }
 
-            const subject = subjects[currentSubjectIndex];
+            const targetSubject = subjects[currentSubjectIndex];
 
             // 1. Show Transition Screen (Fade In)
             quizListScreen.classList.remove('active');
             reviewModeScreen.classList.remove('active');
             fabContainer.style.display = 'none';
 
-            transitionTitle.textContent = subject;
-
-            // Countdown Setup
+            const transitionTitle = document.getElementById('transition-title');
             const countdownEl = document.getElementById('countdown-display');
-            if (countdownEl) countdownEl.textContent = "3";
+            const transitionMsg = document.getElementById('transition-msg');
+
+            // Reset UI for Rolling
+            if (countdownEl) countdownEl.textContent = "";
+            if (transitionMsg) transitionMsg.textContent = "Selecting Subject...";
+            transitionTitle.textContent = "Randomizing...";
+            transitionTitle.style.color = "#333";
 
             transitionScreen.style.display = 'flex';
-            // Force reflow for transition
+            // Force reflow
             void transitionScreen.offsetWidth;
             transitionScreen.style.opacity = '1';
+
+            // --- ROLLING ANIMATION ---
+            let rolls = 0;
+            const maxRolls = 20; // How many flips
+            const rollSpeed = 100; // ms
+
+            const roller = setInterval(() => {
+                // Pick a random subject name to show
+                const randomSub = subjects[Math.floor(Math.random() * subjects.length)];
+                transitionTitle.textContent = randomSub;
+                transitionTitle.style.color = getSubjectColor(randomSub);
+
+                // Optional soft tick
+                Sound.tick();
+
+                rolls++;
+                if (rolls >= maxRolls) {
+                    clearInterval(roller);
+
+                    // LAND ON TARGET
+                    transitionTitle.textContent = targetSubject;
+                    transitionTitle.style.color = getSubjectColor(targetSubject);
+                    if (transitionMsg) transitionMsg.textContent = "Get Ready!";
+                    Sound.correct(); // Ding!
+
+                    // Start Countdown after short pause
+                    setTimeout(() => {
+                        startCountdown(targetSubject);
+                    }, 1000);
+                }
+            }, rollSpeed);
+        }
+
+        function startCountdown(subject) {
+            const countdownEl = document.getElementById('countdown-display');
+            const transitionScreen = document.getElementById('subject-transition-screen');
 
             // 2. Countdown Loop
             let count = 3;
@@ -501,7 +544,6 @@
             }
         }
     </script>
-
 </body>
 
 </html>
